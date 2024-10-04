@@ -158,6 +158,30 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode=telegram.constants.ParseMode.HTML
     )
 
+async def show_leaderboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat is None:
+        logging.error(f"Invalid update object, missing effective chat: {update}")
+        return
+
+    users = []
+    for filename in os.listdir('data/fitness_users'):
+        user_id = int(filename.split('.')[0])
+        user = FitnessUser.load_user(user_id)
+        if user:
+            users.append(user)
+
+    users.sort(key=lambda u: u.total_kilometers, reverse=True)
+
+    leaderboard = "🏆 Leaderboard 🏆\n\n"
+    for i, user in enumerate(users[:10], 1):
+        leaderboard += f"{i}. @{user.username}: {user.total_kilometers:.1f} kilometers\n"
+
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=leaderboard)
+
+async def submit_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = "Please upload the screenshot for your run 😊"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
 
 
 

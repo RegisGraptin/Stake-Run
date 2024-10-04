@@ -3,6 +3,7 @@ import type { NextPage } from 'next';
 import Head from 'next/head';
 import styles from '../styles/Home.module.css';
 import { Header } from '../components/Header';
+import { Footer } from '../components/Footer';
 
 const Home: NextPage = () => {
   return (
@@ -86,13 +87,15 @@ const Home: NextPage = () => {
               ... If needed more space
             </p>
           </div>
-          
+
           <div className="grid mt-6">
             <img className='rounded-lg' src="/images/image_1.jpg" />
           </div>
 
         </div>
       </section>
+
+      <Footer />
 
 
     </div>

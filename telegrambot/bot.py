@@ -71,3 +71,18 @@ class FitnessUser(StoreableBaseModel):
 
     def add_rest_day(self):
         self.rest_days += 1   
+
+    @classmethod
+    def load_user(cls, telegram_id: int):
+        path = f'data/fitness_users/{telegram_id}.json'
+        try:
+            return cls.load(path)
+        except FileNotFoundError:
+            return None
+        except Exception as e:
+            logging.error(f"Error loading user data for {telegram_id}: {e}")
+            return None
+
+    def save_user(self):
+        path = f'data/fitness_users/{self.telegram_id}.json'
+        self.save(path)

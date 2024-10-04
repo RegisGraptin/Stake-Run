@@ -54,4 +54,20 @@ class StoreableBaseModel(BaseModel):
     def load(cls, path: str):
         return load_json_as_model(path, cls)  
     
-    
+
+class FitnessUser(StoreableBaseModel):
+    telegram_id: int
+    username: str
+    total_kilometers: float = Field(default=0)
+    valid_days: int = Field(default=0)
+    rest_days: int = Field(default=0)
+    last_run_date: Optional[date] = Field(default=None)
+    join_date: date = Field(default_factory=date.today)
+
+    def add_run(self, kilometers: float):
+        self.total_kilometers += kilometers
+        self.valid_days += 1
+        self.last_run_date = date.today()
+
+    def add_rest_day(self):
+        self.rest_days += 1   

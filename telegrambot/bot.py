@@ -218,8 +218,96 @@ async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     await context.bot.send_message(chat_id=update.effective_chat.id, text=rules)
 
+async def show_help(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    help_text = """
+    Available commands:
+    /join - Join the challenge
+    /submit - Submit your "proof-of-run"
+    /leaderboard - View the current leaderboard
+    /reward - Check your current reward
+    /rules - View the challenge rules
+    /help - Show this help message
 
-    
+    To submit your daily run, simply send a screenshot of your running app.
+    """
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=help_text)
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    welcome_message = "Welcome to the Fitness Challenge Bot! To get started, use the /join command to join the challenge."
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=welcome_message)
+
+def evaluate_screenshot(image_url):
+    try:
+        # Get the current time from the system
+        current_time = datetime.now()
+        
+        print(f"Current time: {current_time}")
+
+        response = openai.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": [
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": image_url}
+                    }
+                ]}
+            ],
+            max_tokens=300,
+        )
+        bot_response = response.choices[0].message.content
+        print(f"Bot response: {bot_response}")
+        
+        # Use regex to extract the JSON part
+        json_match = re.search(r'\{.*\}', bot_response, re.DOTALL)
+        if json_match:
+            json_str = json_match.group()
+            evaluation_dict = json.loads(json_str)
+            run_evaluation = RunEvaluation(**evaluation_dict)
+            
+            # Check the date
+            current_time = datetime.now()
+            if run_evaluation.date:
+                try:
+                    run_date = datetime.strptime(run_evaluation.date, "%Y-%m-%d %H:%M")
+                    
+                    # Check if the run date is in the future
+                    if run_date > current_time:
+                        run_evaluation.valid = False
+                        run_evaluation.message = "The submitted run date is in the future. Please check the date and try again."
+                    # Check if the run date is within the last 24 hours
+                    elif current_time - run_date > timedelta(hours=24):
+                        run_evaluation.valid = False
+                        run_evaluation.message = "The submitted run is more than 24 hours old. Please submit a recent run."
+                    # If the date is today or yesterday, it's valid
+                    elif run_date.date() in [current_time.date(), (current_time - timedelta(days=1)).date()]:
+                        run_evaluation.valid = True
+                        run_evaluation.message += " The run date is valid."
+                    else:
+                        run_evaluation.valid = False
+                        run_evaluation.message = "The run date is not within the acceptable range. Please submit a run from today or yesterday."
+                except ValueError:
+                    run_evaluation.valid = False
+                    run_evaluation.message = "Invalid date format. Please ensure the date is in the correct format."
+            else:
+                run_evaluation.valid = False
+                run_evaluation.message = "No date provided. Please ensure the screenshot includes the date of the run."
+            
+            return run_evaluation
+        else:
+            print(f"No JSON found in the response: {bot_response}")
+            return RunEvaluation(date="", valid=False, kilometers=0.0, message="Error parsing the response. Please try again.")
+
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON: {e}")
+        return RunEvaluation(date="", valid=False, kilometers=0.0, message="Error parsing the response. Please try again.")
+    except Exception as e:
+        print(f"Error processing screenshot: {e}")
+        return RunEvaluation(date="", valid=False, kilometers=0.0, message="Error processing your screenshot. Please try again.")
+
+
+
 
 
 

@@ -203,7 +203,23 @@ async def check_reward(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Here you would implement the logic to mark a rest day
     await context.bot.send_message(chat_id=update.effective_chat.id, text="Rest day marked. Remember to get back to running tomorrow!")
 
+async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    rules = """
+    🏃‍♂️ Fitness Challenge Rules 🏃‍♀️
 
+    1. Stake at least 0.01 ETH to join the challenge. 
+    2. Run at least 1 km every day for 30 days.
+    2. Submit your run by midnight.
+    3. You can use up to 4 rest days, if you miss more than 4 days, you're out of the challenge.
+    5. The winners are determined by the total km run. Top three will get extra award from the slashed pool.
+    6. You can withdraw your ETH at the end of the challenge.
+
+    Good luck 🍀 and have fun! 
+    """
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=rules)
+
+
+    
 
 
 

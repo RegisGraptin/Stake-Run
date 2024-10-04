@@ -3,7 +3,7 @@ import { Header } from "../../components/Header";
 import { BaseError, useAccount, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { FormEvent } from "react";
 
-import { abi } from "../../abi/StakeAndRun.json";
+import StakeAndRun from "../../abi/StakeAndRun.json";
 import { Address } from "viem";
 
 const CreatePage: NextPage = () => {
@@ -42,7 +42,7 @@ const CreatePage: NextPage = () => {
         // Write to smart contract
         writeContract({
             address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as Address,
-            abi,
+            abi: StakeAndRun.abi,
             functionName: 'createNewChallenge',
             args: [
                 formData.get("title"),

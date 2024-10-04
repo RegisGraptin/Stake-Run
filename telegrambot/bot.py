@@ -390,6 +390,49 @@ async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if query.data == "leaderboard":
         await show_leaderboard(update, context)
 
+# Add a command to show the current bot time
+async def show_bot_time(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    current_time = datetime.now()
+    message = f"Current Bot Time: {current_time}"
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=message)
+
+async def test_motivation(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logging.info("test_motivation command received")
+    await send_daily_motivation(context)
+
+if __name__ == '__main__':
+    bot_token = os.getenv('BOT_TOKEN')
+    if not bot_token:
+        raise ValueError("No BOT_TOKEN found in environment variables")
+
+    application = ApplicationBuilder().token(bot_token).build()
+    
+    # Add new command handlers
+    application.add_handler(CommandHandler('start', start))
+    application.add_handler(CommandHandler('join', join_challenge))
+    application.add_handler(CommandHandler('submit', submit_result))
+    application.add_handler(CommandHandler('leaderboard', show_leaderboard))
+    application.add_handler(CommandHandler('reward', check_reward))
+    application.add_handler(CommandHandler('rules', show_rules))
+    application.add_handler(CommandHandler('help', show_help))
+    application.add_handler(CommandHandler('bottime', show_bot_time))
+    application.add_handler(CommandHandler('testmotivation', test_motivation))
+
+    # Add photo handler
+    #application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+    application.add_handler(MessageHandler(filters.PHOTO, handle_photo))
+
+    # Add button handler
+    application.add_handler(CallbackQueryHandler(button_click))
+
+    # Schedule daily motivation messages
+    scheduler = AsyncIOScheduler()  # Remove the timezone parameter
+    scheduler.add_job(send_daily_motivation, 'cron', hour=7, minute=0, args=[application])
+    scheduler.start()
+
+    # ... (keep existing handlers)
+
+    application.run_polling()
 
 
 

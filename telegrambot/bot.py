@@ -347,6 +347,48 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Invalid update object: {update}")
         return
 
+    await send_typing_action(context, update.effective_chat.id)
+
+    user = FitnessUser.load_user(update.effective_user.id)
+    if not user:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="You're not part of the challenge yet. Use /join to join the challenge.")
+        return
+
+    # Get the largest photo (best quality)
+    photo = update.message.photo[-1]
+    file = await context.bot.get_file(photo.file_id)
+    file_bytes = await file.download_as_bytearray()
+    image_base64 = base64.b64encode(file_bytes).decode('utf-8')
+    file_type = file.file_path.split('.')[-1]
+    encoded_image = f"data:image/{file_type};base64,{image_base64}"
+    print(encoded_image)
+
+    # Send typing action again before evaluating screenshot
+    await send_typing_action(context, update.effective_chat.id)
+
+    result = evaluate_screenshot(encoded_image)
+    # TODO check the date is correct and within 24 hours
+    if result.valid:
+        user.add_run(result.kilometers)
+        user.save_user()
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f"{result.message}\nYou have completed {user.valid_days} days so far. Keep it up! Check out the Leaderboard to see your ranking.",
+            reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Leaderboard", callback_data="leaderboard")]])
+        )
+    else:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text=result.message)
+
+async def button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.callback_query is None:
+        logging.error(f"Invalid update object, missing callback query: {update}")
+        return
+
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == "leaderboard":
+        await show_leaderboard(update, context)
 
 
 

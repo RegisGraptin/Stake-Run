@@ -15,7 +15,6 @@ contract StakeAndRun {
     struct Challenge {
         string name;
         uint256 stakingAmount;
-        uint256 durationDays;
         uint256 startTime;
         uint256 endTime;
         uint256 totalStaked;
@@ -39,7 +38,7 @@ contract StakeAndRun {
     address[] currentParticipants;
 
     /// Events
-    event NewChallenge(uint256 id, uint256 duration);
+    event NewChallenge(uint256 id, uint256 startTime, uint256 endTime);
     event NewUser(uint256 challengeId, address user);
     event DailyRunUploaded(uint256 challengeId, address user, uint256 distance);
     event ChallengeCompleted(uint256 challengeId);
@@ -52,7 +51,6 @@ contract StakeAndRun {
     function createNewChallenge(
         string memory name,
         uint256 stakingAmount,
-        uint256 durationDays,
         uint256 startTime,
         uint256 endTime
     ) public {
@@ -65,7 +63,6 @@ contract StakeAndRun {
         Challenge memory challenge = Challenge({
             name: name,
             stakingAmount: stakingAmount,
-            durationDays: durationDays,
             startTime: startTime,
             endTime: endTime,
             totalStaked: 0,
@@ -74,7 +71,7 @@ contract StakeAndRun {
 
         challenges[counterChallengeId] = challenge;
 
-        emit NewChallenge(counterChallengeId, durationDays);
+        emit NewChallenge(counterChallengeId, startTime, endTime);
 
         counterChallengeId++;
     }

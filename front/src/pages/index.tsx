@@ -40,6 +40,61 @@ const Home: NextPage = () => {
         </div>
       </div>
 
+
+
+      <section className="bg-white lg:pt-40 lg:pb-20 xl:pt-40 xl:pb-32">
+        <div className="gap-16 items-center py-8 px-4 mx-auto max-w-screen-xl lg:grid lg:grid-cols-2 lg:py-16 lg:px-6">
+
+          <div className="grid mt-6">
+            <img className='rounded-lg' src="/images/image_1.jpg" />
+          </div>
+
+          <div className="font-light text-gray-500 sm:text-lg">
+            <h2 className="mb-4 text-4xl tracking-tight font-extrabold text-gray-900">
+              TODO :: Motivate yourself
+            </h2>
+            <p className="mb-4">
+              Health is important but you always putting for tomorrow, now times to get motivated by putting your money on the game.
+            </p>
+
+            <hr />
+
+            <p className="mb-4 pt-4">
+              ... If needed more space
+            </p>
+          </div>
+
+        </div>
+      </section>
+
+
+
+      <section className="bg-white lg:pt-40 lg:pb-20 xl:pt-40 xl:pb-32">
+        <div className="gap-16 items-center py-8 px-4 mx-auto max-w-screen-xl lg:grid lg:grid-cols-2 lg:py-16 lg:px-6">
+
+          <div className="font-light text-gray-500 sm:text-lg">
+            <h2 className="mb-4 text-4xl tracking-tight font-extrabold text-gray-900">
+              TODO :: Other section explain the product
+            </h2>
+            <p className="mb-4">
+              TODO ...
+            </p>
+
+            <hr />
+
+            <p className="mb-4 pt-4">
+              ... If needed more space
+            </p>
+          </div>
+          
+          <div className="grid mt-6">
+            <img className='rounded-lg' src="/images/image_1.jpg" />
+          </div>
+
+        </div>
+      </section>
+
+
     </div>
   );
 };

@@ -306,6 +306,46 @@ def evaluate_screenshot(image_url):
         print(f"Error processing screenshot: {e}")
         return RunEvaluation(date="", valid=False, kilometers=0.0, message="Error processing your screenshot. Please try again.")
 
+async def send_daily_motivation(context: ContextTypes.DEFAULT_TYPE):
+    logging.info("Sending daily motivation messages")
+    motivational_quotes = [
+        "I'm not running away from my problems, I'm running away from my calories.",
+        "Sweat, smile, repeat. Each day brings you closer to greatness.",
+        "Every kilometer is a step toward a stronger mind, body, and soul.",
+        "The only bad workout is the one that didn't happen.",
+        "You're not just running—you're collecting high-fives from your future self.",
+        "Running Rule #1: Don't trip. Rule #2: Don't quit. Rule #3: By day 28, laugh, cry, or do both—whatever gets you to the finish line!"
+    ]
+
+    for user_file in os.listdir('data/fitness_users'):
+        user_id = int(user_file.split('.')[0])
+        user = FitnessUser.load_user(user_id)
+        if user:
+            quote = random.choice(motivational_quotes)
+            days_since_join = (datetime.now().date() - user.join_date).days + 1
+            
+            if user.last_run_date != datetime.now().date() - timedelta(days=1):
+                if user.rest_days < 4:
+                    message = f"Good morning, @{user.username}! It looks like you took a rest yesterday. You have {4 - user.rest_days} rest days remaining."
+                    user.add_rest_day()
+                elif user.rest_days == 4:
+                    message = f"Good morning, @{user.username}! You have used up all your rest days. Don't miss the next upload or you'll get slashed!"
+                else:
+                    message = f"Sorry, @{user.username}. You didn't make it in this challenge. See you next time!"
+            else:
+                message = f"Good morning, @{user.username}! Rise and shine! It's day {days_since_join} of the Stake & Run Challenge. You're doing great! Keep it up!\n\n{quote}\n\nRemember to submit your proof-of-run within 24 hours if you've completed your run yesterday."
+
+            await context.bot.send_message(chat_id=user_id, text=message)
+            user.save_user()
+
+async def send_typing_action(context: ContextTypes.DEFAULT_TYPE, chat_id: int):
+    await context.bot.send_chat_action(chat_id=chat_id, action=telegram.constants.ChatAction.TYPING)
+
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    print('Handle Photo')
+    if update.effective_chat is None or update.effective_user is None or update.message is None or update.message.photo is None:
+        logging.error(f"Invalid update object: {update}")
+        return
 
 
 

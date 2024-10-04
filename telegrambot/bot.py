@@ -86,3 +86,26 @@ class FitnessUser(StoreableBaseModel):
     def save_user(self):
         path = f'data/fitness_users/{self.telegram_id}.json'
         self.save(path)
+
+class RunEvaluation(BaseModel):
+    date: str
+    valid: bool
+    kilometers: float
+    message: str
+
+class MockChallengeContract(StoreableBaseModel):
+    staking_amount: float = Field(default=10.0)
+    members: set[int] = Field(default_factory=set)
+    pool: float = Field(default=0.0)
+    
+    def join(self, telegram_id: int) -> bool:
+        if telegram_id in self.members:
+            return False
+        self.members.add(telegram_id)
+        self.pool += self.staking_amount
+        return True
+
+try:
+    CHALLENGE = MockChallengeContract.load("data/challenge.json")
+except FileNotFoundError:
+    CHALLENGE = MockChallengeContract(staking_amount=10.0)

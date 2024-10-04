@@ -1,3 +1,5 @@
 
 # Dotenv file
 */.env
+data/**/*.json
+.venv

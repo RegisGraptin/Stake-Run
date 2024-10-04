@@ -26,10 +26,8 @@ const Dashboard: NextPage = () => {
 
                 <h2 className="text-4xl font-extrabold">Dashboard</h2>
 
-
-
                 <IDKitWidget
-                    app_id="app_8eb4a556bb2ab6a786a08ba2f871a2a5" // must be an app set to on-chain in Developer Portal
+                    app_id="app_staging_bcd4ed1fdbc0bd7f4dbbc4936e666e88" // must be an app set to on-chain in Developer Portal
                     action="identification"
                     signal={address} // proof will only verify if the signal is unchanged, this prevents tampering
                     onSuccess={onSuccess} // use onSuccess to call your smart contract

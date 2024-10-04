@@ -136,4 +136,34 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     CHALLENGE.join(user.telegram_id)
     CHALLENGE.save("data/challenge.json")
 
+# Generate QR code for USDC staking
+    amount = CHALLENGE.staking_amount
+    eip681_url = f"ethereum:pay-{USDC_CONTRACT_ADDRESS}@{CHAIN_ID}/transfer?address={CHALLENGE_CONTRACT_ADDRESS}&uint256={int(amount * 1e6)}"
     
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(eip681_url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    bio = io.BytesIO()
+    img.save(bio, 'PNG')
+    bio.seek(0)
+    
+    metamask_deep_link = f"https://metamask.app.link/send/{eip681_url}"
+
+    await context.bot.send_photo(
+        chat_id=update.effective_chat.id,
+        photo=bio,
+        caption=f"Scan this QR code with your mobile wallet to stake USDC and join the challenge.\n\n<a href='{metamask_deep_link}'>Or click here to send directly via MetaMask</a>",
+        parse_mode=telegram.constants.ParseMode.HTML
+    )
+
+
+
+
+
+
+
+
+
+

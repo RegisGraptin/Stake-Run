@@ -1,1 +1,1 @@
-# Stake-Run
+# Stake & Run

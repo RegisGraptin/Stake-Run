@@ -109,3 +109,31 @@ try:
     CHALLENGE = MockChallengeContract.load("data/challenge.json")
 except FileNotFoundError:
     CHALLENGE = MockChallengeContract(staking_amount=10.0)
+
+
+
+async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_chat is None or update.effective_user is None:
+        logging.error(f"Invalid update object, missing effective chat or user: {update}")
+        return
+
+    try:
+        if update.effective_user.id in CHALLENGE.members:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text="You're already part of the challenge!")
+            return
+    except Exception as e:
+        logging.error(f"Error loading user data: {e}")
+        # If there's an error loading the user, we'll create a new one
+
+    # Create a new user
+    user = FitnessUser(
+        telegram_id=update.effective_user.id,
+        username=update.effective_user.username or "",
+        join_date=date.today()  # Explicitly set join_date
+    )
+    user.save_user()
+    
+    CHALLENGE.join(user.telegram_id)
+    CHALLENGE.save("data/challenge.json")
+
+    

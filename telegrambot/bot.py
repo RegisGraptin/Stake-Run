@@ -184,6 +184,25 @@ async def submit_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+async def check_reward(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # TODO should that be the total pool value, or the user reward base don their current leaderboard positoin? Since the function name is check reward
+    total_pool = CHALLENGE.pool
+    current_value = CHALLENGE.pool * 1.05
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Total USDC in the pool: {total_pool:,.1f}\nCurrent value with interest: {current_value:,.1f}")
+
+# async def rest_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
+#     if update.effective_chat is None or update.effective_user is None:
+#         logging.error(f"Invalid update object, missing effective chat or user: {update}")
+#         return
+
+    user = FitnessUser.load_user(update.effective_user.id)
+    if not user:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text="You're not part of the challenge yet. Use /join to join the challenge.")
+        return
+
+    # Here you would implement the logic to mark a rest day
+    await context.bot.send_message(chat_id=update.effective_chat.id, text="Rest day marked. Remember to get back to running tomorrow!")
+
 
 
 

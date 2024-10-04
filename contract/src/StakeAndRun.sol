@@ -26,6 +26,8 @@ contract StakeAndRun {
     struct UserMetadata {
         string telegramHandler;
         uint256 kilometersRunned;
+        uint256 lastUpdated;
+        uint256 totalRestDay;
     }
 
     // Record all the challenges
@@ -37,7 +39,8 @@ contract StakeAndRun {
 
     /// Events 
     event NewChallenge(uint256 id, uint256 duration);
-    event NewUser(uint256 challengeId, address member);
+    event NewUser(uint256 challengeId, address user);
+    event DailyRunUploaded(uint256 challengeId, address user, uint256 distance);
 
     constructor() {
         owner = msg.sender;
@@ -93,12 +96,36 @@ contract StakeAndRun {
         participants[challengeId][msg.sender] = true;
         userInfo[challengeId][msg.sender] = UserMetadata({
             telegramHandler: telegramHandler,
-            kilometersRunned: 0
+            kilometersRunned: 0,
+            lastUpdated: challenges[challengeId].startTime,
+            totalRestDay: 0
         });
 
         // Emit event
         emit NewUser(challengeId, msg.sender);
     }
+
+    function addDailyRun(uint256 challengeId, uint256 distanceKm) external {
+        require(challenges[challengeId].startTime < block.timestamp, "Challenge has not started!");
+        require(!challenges[challengeId].isCompleted, "Challenge is completed!");
+        require(isParticipant(challengeId, msg.sender), "User is not a participant!");
+        require(distanceKm > 1, "Must run at least 1km");
+
+        // Get user info
+        UserMetadata memory user = userInfo[challengeId][msg.sender];
+        uint256 duration = block.timestamp - user.lastUpdated;
+
+        // User did not submit the last day
+        if (duration > 1.2 days) {
+            user.totalRestDay = duration % 1 days;
+        }
+
+        user.kilometersRunned += distanceKm;
+        user.lastUpdated = block.timestamp;
+
+        emit DailyRunUploaded(challengeId, msg.sender, distanceKm);
+    }
+
 
 
     // Leaderboard

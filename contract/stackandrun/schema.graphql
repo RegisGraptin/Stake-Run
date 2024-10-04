@@ -1,0 +1,36 @@
+type ChallengeCompleted @entity(immutable: true) {
+  id: Bytes!
+  challengeId: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type DailyRunUploaded @entity(immutable: true) {
+  id: Bytes!
+  challengeId: BigInt! # uint256
+  user: Bytes! # address
+  distance: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type NewChallenge @entity(immutable: true) {
+  id: Bytes!
+  StakeAndRun_id: BigInt! # uint256
+  startTime: BigInt! # uint256
+  endTime: BigInt! # uint256
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}
+
+type NewUser @entity(immutable: true) {
+  id: Bytes!
+  challengeId: BigInt! # uint256
+  user: Bytes! # address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  transactionHash: Bytes!
+}

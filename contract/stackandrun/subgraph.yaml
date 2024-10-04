@@ -1,0 +1,35 @@
+specVersion: 1.0.0
+indexerHints:
+  prune: auto
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum
+    name: StakeAndRun
+    network: scroll-sepolia
+    source:
+      address: "0x5d577A3e774622f49f333499534be55a2Cf5d4F6"
+      abi: StakeAndRun
+      startBlock: 6868679
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.7
+      language: wasm/assemblyscript
+      entities:
+        - ChallengeCompleted
+        - DailyRunUploaded
+        - NewChallenge
+        - NewUser
+      abis:
+        - name: StakeAndRun
+          file: ./abis/StakeAndRun.json
+      eventHandlers:
+        - event: ChallengeCompleted(uint256)
+          handler: handleChallengeCompleted
+        - event: DailyRunUploaded(uint256,address,uint256)
+          handler: handleDailyRunUploaded
+        - event: NewChallenge(uint256,uint256,uint256)
+          handler: handleNewChallenge
+        - event: NewUser(uint256,address)
+          handler: handleNewUser
+      file: ./src/stake-and-run.ts

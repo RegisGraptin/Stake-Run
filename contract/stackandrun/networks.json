@@ -1,0 +1,8 @@
+{
+  "scroll-sepolia": {
+    "StakeAndRun": {
+      "address": "0x5d577A3e774622f49f333499534be55a2Cf5d4F6",
+      "startBlock": 6868679
+    }
+  }
+}

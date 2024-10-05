@@ -93,7 +93,7 @@ def call_function(contract_address: str, signature: str, *args):
         'from': CALLER_ADDRESS,
         'nonce': web3.eth.get_transaction_count(CALLER_ADDRESS),
         'gas': 0,  # We'll estimate this
-        'gasPrice': web3.eth.gas_price,
+        'gasPrice': web3.eth.gas_price * 2,
     })
 
     # Estimate gas

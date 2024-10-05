@@ -8,7 +8,11 @@ contract CounterTest is Test {
     StakeAndRun public stakeAndRun;
 
     function setUp() public {
-        stakeAndRun = new StakeAndRun();
+
+        string memory appId = "app_staging_bcd4ed1fdbc0bd7f4dbbc4936e666e88";
+        string memory action = "identification";
+        
+        stakeAndRun = new StakeAndRun(appId, action);
     }
 
 }

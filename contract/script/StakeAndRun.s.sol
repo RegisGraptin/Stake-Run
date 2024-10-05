@@ -13,7 +13,10 @@ contract StakeAndRunScript is Script {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
         
-        stakeAndRun = new StakeAndRun();
+        string memory appId = "app_staging_bcd4ed1fdbc0bd7f4dbbc4936e666e88";
+        string memory action = "identification";
+        
+        stakeAndRun = new StakeAndRun(appId, action);
 
         vm.stopBroadcast();
     }

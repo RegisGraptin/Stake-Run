@@ -61,6 +61,8 @@ contract StakeAndRun {
 
     mapping(uint256 => mapping(address => UserMetadata)) userInfo;
 
+    mapping(uint256 => address[]) savedLeaderBoard;
+
     address[] currentParticipants;
 
     /// Events
@@ -194,6 +196,34 @@ contract StakeAndRun {
         emit DailyRunUploaded(challengeId, msg.sender, distanceKm);
     }
 
+    function getLeaderBoard(uint256 challengeId) view public returns(address[] memory) {
+        // We alrady have the leaderboard
+        if (savedLeaderBoard[challengeId].length > 0) {
+            return savedLeaderBoard[challengeId];
+        }
+
+        // Copy current user
+        address[] memory temp = new address[](currentParticipants.length);
+        for (uint i = 0; i < currentParticipants.length; i++) {
+            temp[i] = currentParticipants[i];
+        }
+
+        // Order them based on the distance
+        for (uint i = 0; i < temp.length; i++) {
+            uint256 km_i = userInfo[challengeId][currentParticipants[i]].kilometersRunned;
+            for (uint j = i + 1; j < temp.length; j++) {
+                uint256 km_j = userInfo[challengeId][currentParticipants[j]].kilometersRunned;
+                if (km_i < km_j) {
+                    address t = temp[i];
+                    temp[i] = temp[j];
+                    temp[j] = t;
+                }
+            }
+        }
+
+        return temp;
+    }
+
     function completeChallenge(uint256 challengeId) external {
         require(
             challenges[challengeId].endTime < block.timestamp,
@@ -217,6 +247,11 @@ contract StakeAndRun {
                     temp[j] = t;
                 }
             }
+        }
+
+        // Store the leaderboard
+        for (uint i = 0; i < temp.length; i++) {
+            savedLeaderBoard[challengeId].push(temp[i]);
         }
 
         Challenge memory challengeDetail = challenges[challengeId];

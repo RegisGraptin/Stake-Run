@@ -196,10 +196,12 @@ contract StakeAndRun {
 
 
     function addDailyRun(uint256 challengeId, uint256 distanceKm) external {
-        require(
-            challenges[challengeId].startTime < block.timestamp,
-            "Challenge has not started!"
-        );
+        // FIXME :: As we depends on time, it cannot be tested for the demo, need to be remove when deployed
+        // require(
+        //     challenges[challengeId].startTime < block.timestamp,
+        //     "Challenge has not started!"
+        // );
+
         require(
             !challenges[challengeId].isCompleted,
             "Challenge is completed!"
@@ -227,10 +229,12 @@ contract StakeAndRun {
 
     function addDailyRunOnBehalfOfUser(uint256 challengeId, uint256 distanceKm, address userAdress) external {
         // The telegram bot will sponsor the tx
-        require(
-            challenges[challengeId].startTime < block.timestamp,
-            "Challenge has not started!"
-        );
+
+        // FIXME :: Same remarks above for demo purpose
+        // require(
+        //     challenges[challengeId].startTime < block.timestamp,
+        //     "Challenge has not started!"
+        // );
         require(
             !challenges[challengeId].isCompleted,
             "Challenge is completed!"

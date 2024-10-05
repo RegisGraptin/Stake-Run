@@ -1,11 +1,1 @@
-{
-    "telegram_id": 2005761692,
-    "username": "regis_telegram",
-    "address": "",
-    "total_kilometers": 22.5,
-    "valid_days": 1,
-    "rest_days": 0,
-    "last_run_date": null,
-    "join_date": "2024-10-05",
-    "disqualified": false
-}
+{"telegram_id":2005761692,"username":"regis_telegram","address":"","total_kilometers":22.5,"valid_days":1,"rest_days":1,"last_run_date":null,"join_date":"2024-10-05","disqualified":false}

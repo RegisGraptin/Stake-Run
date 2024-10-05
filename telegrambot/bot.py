@@ -272,6 +272,7 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
     try:
+        #if False: 
         if update.effective_user.id in CHALLENGE.members:
             await context.bot.send_message(chat_id=update.effective_chat.id, text="You're already part of the challenge!")
             return
@@ -305,7 +306,7 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=bio,
-        caption=f"Scan this QR code with your mobile wallet to stake USDC and join the challenge.\n\n<a href='{metamask_deep_link}'>Or click here to send directly via MetaMask</a>\n\nTo check your status run /join again after you sent the transaction.",
+        caption=f"Scan this QR code with your mobile wallet to stake ETH and join the challenge.\n\n<a href='{metamask_deep_link}'>Or click here to send directly via MetaMask</a>\n\nTo check your status run /join again after you sent the transaction.",
         parse_mode=telegram.constants.ParseMode.HTML
     )
 
@@ -337,9 +338,9 @@ async def submit_result(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def check_reward(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # TODO should that be the total pool value, or the user reward base don their current leaderboard positoin? Since the function name is check reward
-    total_pool = CHALLENGE.pool
-    current_value = CHALLENGE.pool * 1.05
-    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Total USDC in the pool: {total_pool:,.1f}\nCurrent value with interest: {current_value:,.1f}")
+    total_pool = CHALLENGE.pool / 100
+    current_value = CHALLENGE.pool * 1.05 / 100
+    await context.bot.send_message(chat_id=update.effective_chat.id, text=f"Total ETH in the pool: {total_pool:,.3f}\nCurrent value with interest: {current_value:,.3f}")
 
 # async def rest_day(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #     if update.effective_chat is None or update.effective_user is None:

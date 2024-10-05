@@ -2,24 +2,20 @@ import io
 import os 
 import logging
 import pathlib
-from typing import Any
 import dotenv
 import base64
 import qrcode
 import telegram
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.constants import ChatAction
 from telegram.ext import filters, MessageHandler, ApplicationBuilder, CommandHandler, ContextTypes, CallbackQueryHandler
-import uuid
-import requests
 import json
-from datetime import datetime, time, timedelta
+from datetime import datetime, timedelta
 #import pytz
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import random
 import openai
-from typing import List, Optional, Type, TypeVar
-from pydantic import BaseModel, Field, StrictStr
+from typing import Optional, Type, TypeVar
+from pydantic import BaseModel, Field
 import requests
 from datetime import date
 import re
@@ -402,6 +398,9 @@ async def test_motivation(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await send_daily_motivation(context)
 
 if __name__ == '__main__':
+    # FIXME :: Force time zone asia - Check if no issue on other env
+    os.environ['TZ'] = 'Asia/Kuala_Lumpur'
+
     bot_token = os.getenv('BOT_TOKEN')
     if not bot_token:
         raise ValueError("No BOT_TOKEN found in environment variables")

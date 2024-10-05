@@ -36,7 +36,7 @@ const CreatePage: NextPage = () => {
 
 
         let stackedAmount = Number(formData.get("staking_amount") as string)
-        stackedAmount = stackedAmount * (10 ** 16);
+        stackedAmount = stackedAmount * (10 ** 1);
         const stackedAmountValue = BigInt(stackedAmount);
 
         // Write to smart contract

@@ -24,6 +24,9 @@ contract StakeAndRun {
     /// @dev Whether a nullifier hash has been used already. Used to guarantee an action is only performed once by a single person
     mapping(uint256 => bool) internal nullifierHashes;
 
+    mapping(bytes32 => bool) internal knownHash;
+
+    address nodeServerOperator;
 
     /// Contract properties
     // Contract owner
@@ -78,6 +81,7 @@ contract StakeAndRun {
     ) {
         owner = msg.sender;
         currentChallengeRunning = false;
+        nodeServerOperator = 0x5fC01da058Da238756133c51D4152d32279dF90F;
 
         // worldId = _worldId;
         externalNullifierHash = abi
@@ -282,6 +286,7 @@ contract StakeAndRun {
         challenges[challengeId].isCompleted = true;
     }
 
+    // FIXME :: could not work on SCROLL - instead see verifyByUsingCloudData
     /// @param signal An arbitrary input from the user, usually the user's wallet address
     /// @param root The root (returned by the IDKit widget).
     /// @param nullifierHash The nullifier hash for this proof, preventing double signaling (returned by the IDKit widget).
@@ -310,6 +315,13 @@ contract StakeAndRun {
 
         // Finally, set the user has verified
         isRealHuman[msg.sender] = true;
+    }
+
+    function verifyByUsingCloudData(bytes32 userHash, address user) public {
+        require(msg.sender == nodeServerOperator, "Not the node operator");
+        require(!knownHash[userHash], "Already know this hash");
+        knownHash[userHash] = true;
+        isRealHuman[user] = true;
     }
 
 

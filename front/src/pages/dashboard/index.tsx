@@ -1,6 +1,6 @@
 import { NextPage } from "next";
 import { Header } from "../../components/Header";
-import { IDKitWidget, VerificationLevel } from '@worldcoin/idkit'
+import { IDKitWidget, ISuccessResult, VerificationLevel } from '@worldcoin/idkit'
 import { useAccount, useReadContract } from "wagmi";
 import { ChallengeCard } from "../../components/ChallengeCard";
 
@@ -36,6 +36,20 @@ const Dashboard: NextPage = () => {
         setVerifiedAccount(true);
     }
 
+    const handleVerify = async (proof: ISuccessResult) => {
+        console.log("Only work locally as a server is needed...")
+        const res = await fetch("http://localhost:3001/api/verify", { // route to your backend will depend on implementation
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(proof),
+        })
+        if (!res.ok) {
+            throw new Error("Verification failed."); // IDKit will display the error message to the user in the modal
+        }
+    };
+
 
     return (
         <div>
@@ -53,6 +67,7 @@ const Dashboard: NextPage = () => {
                             action="identification"
                             signal={address} // proof will only verify if the signal is unchanged, this prevents tampering
                             onSuccess={onSuccess} // use onSuccess to call your smart contract
+                            handleVerify={handleVerify}
                             // no use for handleVerify, so it is removed
                             // use default verification_level (orb-only), as device credentials are not supported on-chain
                         >

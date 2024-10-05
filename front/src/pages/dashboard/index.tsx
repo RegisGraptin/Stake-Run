@@ -43,18 +43,18 @@ const Dashboard: NextPage = () => {
         if (verifiedAccount === undefined) {
             fetchUserStatus()
         }
-     }, []);
+    }, []);
 
-    
 
-    const onSuccess = () => {}
+
+    const onSuccess = () => { }
 
     const handleVerify = async (proof: ISuccessResult) => {
         console.log("Only work locally as a server is needed...")
-        
+
         proof["user_address"] = address;
         let data = JSON.stringify(proof);
-    
+
         console.log(data);
 
         const res = await fetch("http://localhost:3001/api/verify", { // route to your backend will depend on implementation
@@ -88,8 +88,8 @@ const Dashboard: NextPage = () => {
                             onSuccess={onSuccess} // use onSuccess to call your smart contract
                             handleVerify={handleVerify}
                             verification_level={VerificationLevel.Orb}
-                            // no use for handleVerify, so it is removed
-                            // use default verification_level (orb-only), as device credentials are not supported on-chain
+                        // no use for handleVerify, so it is removed
+                        // use default verification_level (orb-only), as device credentials are not supported on-chain
                         >
                             {({ open }) => <button
                                 onClick={open}
@@ -100,8 +100,21 @@ const Dashboard: NextPage = () => {
 
                         </IDKitWidget>
                     )}
+
+                    {verifiedAccount && (
+                        <div className="relative inline-flex">
+                            <button className="rounded-md bg-slate-800 py-2 px-4 border border-transparent text-center text-sm text-white transition-all shadow-md hover:shadow-lg focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
+                                Human verified
+                            </button>
+                            <span className="absolute top-0.5 right-0.5 grid min-h-[28px] min-w-[28px] translate-x-2/4 -translate-y-2/4 place-items-center rounded-full bg-green-600 py-1 px-1 text-xs text-white border border-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="w-4 h-4">
+                                    <path fill-rule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clip-rule="evenodd" />
+                                </svg>
+                            </span>
+                        </div>
+                    )}
                 </div>
-                
+
 
                 <div className="gap-16 items-center py-8 px-4 mx-auto max-w-screen-xl lg:grid lg:grid-cols-3 lg:py-16 lg:px-6">
                     {challenges && challenges.map((challenge, key) => {
@@ -114,9 +127,6 @@ const Dashboard: NextPage = () => {
                 </div>
 
             </section>
-
-
-
         </div>
     );
 };

@@ -57,6 +57,8 @@ contract StakeAndRun {
 
     mapping(uint256 => mapping(address => bool)) participants;
 
+    mapping(address => bool) isRealHuman; // Verify the user with worldcoin
+
     mapping(uint256 => mapping(address => UserMetadata)) userInfo;
 
     address[] currentParticipants;
@@ -143,6 +145,7 @@ contract StakeAndRun {
             !participants[challengeId][msg.sender],
             "Already a participant"
         );
+        // require(isRealHuman[msg.sender], "Not a verified user"); // FIXME ::
 
         participants[challengeId][msg.sender] = true;
         userInfo[challengeId][msg.sender] = UserMetadata({
@@ -270,8 +273,8 @@ contract StakeAndRun {
         // Record the user has done this, so they can't do it again (proof of uniqueness)
         nullifierHashes[nullifierHash] = true;
 
-        // Finally, execute your logic here, for example issue a token, NFT, etc...
-
+        // Finally, set the user has verified
+        isRealHuman[msg.sender] = true;
     }
 
 

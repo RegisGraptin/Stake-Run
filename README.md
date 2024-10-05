@@ -32,7 +32,7 @@
 
 ### Scroll 
 
-We have deployed our smart contract on Scroll. You can find the contract at "0xa3757957bdE26F6581b81b0363E00F635628c4E4". You can see more information and the verification of this contract on scroll explorer, see: https://sepolia.scrollscan.com/address/0xa3757957bdE26F6581b81b0363E00F635628c4E4
+We have deployed our smart contract on Scroll. You can find the Challenge contract address at "0x684694Fb381f8762B63e9D946dB8C817D973C12f". You can see more information and the verification of this contract on scroll explorer, see: https://sepolia.scrollscan.com/address/0x684694fb381f8762b63e9d946db8c817d973c12f
 
 ### The Graph
 
@@ -45,3 +45,6 @@ The graph endpoint we are using is: https://api.studio.thegraph.com/query/90703/
 We want to have a fair competition betweent participants, and make sure that the participants are real person. To help us in this process, we have integrated world coin. As we are currently using Scroll, it is not possible to verify the user proof from world coin. The workaround use here, is to rely on another party that is going to request the validity of the proof of the user to worldcoin, and in case it is valide, sign a transaction to the smartcontract and attest that the given address is a valid human. We have develop a simple backend app, that you can find in the 'worldcoin_server'.
 On the frontend, we are doing the verification here: https://github.com/RegisGraptin/StakeAndRun/blob/master/front/src/pages/dashboard/index.tsx#L58
 Else, see the server to see the process doing by the trusted party: https://github.com/RegisGraptin/StakeAndRun/blob/master/wordcoin_server/server.mjs
+
+
+

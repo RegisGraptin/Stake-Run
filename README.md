@@ -26,3 +26,22 @@
 - **AI Coaching:** The Telegram bot includes an AI coach that sends daily motivational messages to keep users engaged. These messages remind participants to upload their run and check the leaderboard with encouraging quotes like, "The only bad workout is the one that didn't happen" or "You're collecting high-fives from your future self."
     
 - **Web Application Access:** Users can also enroll in the challenge through a web application using Worldcoin authentication. The web app provides an alternative platform where participants can track their rankings on the leaderboard.
+
+
+## Technical implementation
+
+### Scroll 
+
+We have deployed our smart contract on Scroll. You can find the contract at "0xa3757957bdE26F6581b81b0363E00F635628c4E4". You can see more information and the verification of this contract on scroll explorer, see: https://sepolia.scrollscan.com/address/0xa3757957bdE26F6581b81b0363E00F635628c4E4
+
+### The Graph
+
+Instead of fetching the data direclty from the smart contract, we are using the graph. For each event created, the data will be indexed on the graph. And we can use it, later on, on our front end to retrieve it. For instance, we are using it to fetch the current and past challenges. 
+You can see it here: https://github.com/RegisGraptin/StakeAndRun/blob/master/front/src/pages/dashboard/index.tsx#L22
+The graph endpoint we are using is: https://api.studio.thegraph.com/query/90703/stakeandrun/v0.0.4
+
+### Worldcoin
+
+We want to have a fair competition betweent participants, and make sure that the participants are real person. To help us in this process, we have integrated world coin. As we are currently using Scroll, it is not possible to verify the user proof from world coin. The workaround use here, is to rely on another party that is going to request the validity of the proof of the user to worldcoin, and in case it is valide, sign a transaction to the smartcontract and attest that the given address is a valid human. We have develop a simple backend app, that you can find in the 'worldcoin_server'.
+On the frontend, we are doing the verification here: https://github.com/RegisGraptin/StakeAndRun/blob/master/front/src/pages/dashboard/index.tsx#L58
+Else, see the server to see the process doing by the trusted party: https://github.com/RegisGraptin/StakeAndRun/blob/master/wordcoin_server/server.mjs

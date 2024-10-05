@@ -5,6 +5,7 @@ This is a [RainbowKit](https://rainbowkit.com) + [wagmi](https://wagmi.sh) + [Ne
 First, run the development server:
 
 ```bash
+npm install
 npm run dev
 ```
 

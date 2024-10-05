@@ -170,6 +170,31 @@ contract StakeAndRun {
         emit NewUser(challengeId, msg.sender);
     }
 
+    function joinChallengeOnBehalfOfUser(
+        uint256 challengeId,
+        string memory telegramHandler,
+        address user
+    ) external payable {
+        // FIXME :: Telegram option to allow user to join the com
+        // FIXME :: Need to be deleted once we have metamask on the telegram working
+        participants[challengeId][user] = true;
+        userInfo[challengeId][user] = UserMetadata({
+            telegramHandler: telegramHandler,
+            kilometersRunned: 0,
+            lastUpdated: challenges[challengeId].startTime,
+            totalRestDay: 0
+        });
+
+        currentParticipants.push(user);
+
+        // Increase the stacking amount of the challenge
+        challenges[challengeId].stakingAmount += msg.value;
+
+        // Emit event
+        emit NewUser(challengeId, user);
+    }
+
+
     function addDailyRun(uint256 challengeId, uint256 distanceKm) external {
         require(
             challenges[challengeId].startTime < block.timestamp,

@@ -246,6 +246,16 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Invalid update object, missing effective chat or user: {update}")
         return
 
+    # Create a new user
+    user = FitnessUser.load_user(update.effective_user.id)
+    print(user)
+    if user is None:
+        user = FitnessUser(
+            telegram_id=update.effective_user.id,
+            username=update.effective_user.username or "",
+            join_date=date.today()  # Explicitly set join_date
+        )
+        user.save_user()
 
     query = f"""
         {{
@@ -254,7 +264,6 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }}
         }}
     """
-    print(query)
     response = fetch_data_from_subgraph(query)
     if response['data']['newUsers']:
         print('User staked and joined successfully')
@@ -269,13 +278,7 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error loading user data: {e}")
         # If there's an error loading the user, we'll create a new one
-    # Create a new user
-    user = FitnessUser(
-        telegram_id=update.effective_user.id,
-        username=update.effective_user.username or "",
-        join_date=date.today()  # Explicitly set join_date
-    )
-    user.save_user()
+
 
 
 # Generate QR code for USDC staking
@@ -538,7 +541,23 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         result.valid = False
     if result.valid:
         user.add_run(result.kilometers)
-        # TODO add back in: call_function(CHALLENGE_CONTRACT_ADDRESS, 'addDailyRunOnBehalfOfUser(uint256,uint256,address)', CHALLENGE_ID, round(result.kilometers * 100), user.address)    
+
+        # get user address
+        query = f"""
+        {{
+        newUsers(where: {{telegram: "@{update.effective_user.username}", challengeId: {CHALLENGE_ID}}}) {{
+            user
+        }}
+        }}
+        """
+        response = fetch_data_from_subgraph(query)
+        if len(response['data']['newUsers']) != 1:
+            await context.bot.send_message(chat_id=update.effective_chat.id, text="An error occured, please try again later.")
+            return
+        user_address = response['data']['newUsers'][0]['user']
+        user_address = Web3.to_checksum_address(user_address)
+        print('Found user address', user_address)
+        call_function(CHALLENGE_CONTRACT_ADDRESS, 'addDailyRunOnBehalfOfUser(uint256,uint256,address)', int(CHALLENGE_ID), round(result.kilometers * 100), user_address)    
         user.save_user()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,

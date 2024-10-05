@@ -58,9 +58,6 @@ const CreatePage: NextPage = () => {
             <Header />
 
             <section className="container mx-auto pt-40">
-
-
-
                 <form onSubmit={onSubmit}>
 
                     <div>

@@ -29,13 +29,14 @@ const Home: NextPage = () => {
               <h4 className="mb-6 text-xl font-semibold">
                 Put your money on the line and run
               </h4>
-              <button
+              <a
+                href='https://t.me/StakeRunBot'
                 type="button"
                 className="rounded border-2 border-neutral-50 px-7 pb-[8px] pt-[10px] text-sm font-medium uppercase leading-normal text-neutral-50 transition duration-150 ease-in-out hover:border-neutral-100 hover:bg-neutral-500 hover:bg-opacity-10 hover:text-neutral-100 focus:border-neutral-100 focus:text-neutral-100 focus:outline-none focus:ring-0 active:border-neutral-200 active:text-neutral-200 dark:hover:bg-neutral-100 dark:hover:bg-opacity-10"
                 data-twe-ripple-init
                 data-twe-ripple-color="light">
-                Call to action
-              </button>
+                Try on Telegram
+              </a>
             </div>
           </div>
         </div>
@@ -52,16 +53,16 @@ const Home: NextPage = () => {
 
           <div className="font-light text-gray-500 sm:text-lg">
             <h2 className="mb-4 text-4xl tracking-tight font-extrabold text-gray-900">
-              TODO :: Motivate yourself
+              Struggling to stay motivated on your fitness journey?
             </h2>
             <p className="mb-4">
-              Health is important but you always putting for tomorrow, now times to get motivated by putting your money on the game.
+            Join the 30-day running challenge with Stake & Run—the perfect blend of fitness, motivation, and rewards, all powered by crypto.
             </p>
 
             <hr />
 
             <p className="mb-4 pt-4">
-              ... If needed more space
+              
             </p>
           </div>
 
@@ -75,16 +76,19 @@ const Home: NextPage = () => {
 
           <div className="font-light text-gray-500 sm:text-lg">
             <h2 className="mb-4 text-4xl tracking-tight font-extrabold text-gray-900">
-              TODO :: Other section explain the product
+            Ready to take on the challenge? Try out our Telegram bot today! 
+
             </h2>
             <p className="mb-4">
-              TODO ...
+              
+
+
             </p>
 
             <hr />
 
             <p className="mb-4 pt-4">
-              ... If needed more space
+            With Stake & Run, reaching your fitness goals is not only fun but rewarding. Stake your ETH, join the challenge, and let our AI coach keep you on track. Simply run, upload your screenshot, earn back your stake and win rewards. Whether you're training for a marathon or just staying fit, we've made it easy.
             </p>
           </div>
 

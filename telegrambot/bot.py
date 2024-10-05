@@ -21,20 +21,22 @@ from datetime import date
 import re
 from web3 import Web3
 
+dotenv.load_dotenv("telegrambot/.env")
+
 T = TypeVar('T', bound=BaseModel) 
 SYSTEM_PROMPT = pathlib.Path("telegrambot/system_prompt.txt").read_text()
 USDC_CONTRACT_ADDRESS = '0x2C9678042D52B97D27f2bD2947F7111d93F3dD0D'
 #CHALLENGE_CONTRACT_ADDRESS = '0x5314D73A0A122Ea9b7f4747cdC0a47eB998CC7DD'
 
 CHAIN_ID = "534351" # scroll sepolia chain id
-CHALLENGE_ID = "1"
+CHALLENGE_ID = "0"
 RPC_URL = os.getenv('RPC_URL')
 CALLER_ADDRESS = os.getenv('ACCOUNT_ADDRESS')
 CALLER_PK = os.getenv('PRIVATE_KEY')
+SUBGRAPH_ENDPOINT = os.getenv('SUBGRAPH_ENDPOINT')
 
 CHALLENGE_CONTRACT_ADDRESS = os.getenv('CHALLENGE_CONTRACT_ADDRESS')
 
-dotenv.load_dotenv("telegrambot/.env")
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
 logging.basicConfig(
@@ -123,6 +125,25 @@ def call_function(contract_address: str, signature: str, *args):
     print(f"Gas used: {tx_receipt.gasUsed}")
     return tx_receipt
 
+def fetch_data_from_subgraph(query: str):
+    print(SUBGRAPH_ENDPOINT)
+    # Set up the headers for the request
+    headers = {'Content-Type': 'application/json'}
+    
+    # Prepare the data payload
+    payload = json.dumps({'query': query})
+    
+    try:
+        # Make the HTTP POST request
+        response = requests.post(SUBGRAPH_ENDPOINT, headers=headers, data=payload)
+        
+        # Check if the request was successful
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print('Failed to fetch data:', response.status_code)
+    except Exception as error:
+        print('Error fetching data:', error)
 
 def load_json_as_model(path: str, model: Type[T]) -> T:
     with open(path, 'r') as file:
@@ -144,6 +165,7 @@ class StoreableBaseModel(BaseModel):
 class FitnessUser(StoreableBaseModel):
     telegram_id: int
     username: str
+    address: str = Field(default="")
     total_kilometers: float = Field(default=0)
     valid_days: int = Field(default=0)
     rest_days: int = Field(default=0)
@@ -180,10 +202,13 @@ class RunEvaluation(BaseModel):
     kilometers: float
     message: str
 
+    def get_datetime(self) -> datetime:
+        return datetime.strptime(self.date, "%Y-%m-%d %H:%M")
+
 class MockChallengeContract(StoreableBaseModel):
     staking_amount: int = Field(default=1)
     members: set[int] = Field(default_factory=set)
-    pool: float = Field(default=0.0)
+    pool: int = Field(default=0)
     
     def join(self, telegram_id: int) -> bool:
         if telegram_id in self.members:
@@ -221,6 +246,22 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logging.error(f"Invalid update object, missing effective chat or user: {update}")
         return
 
+
+    query = f"""
+        {{
+        newUsers(where: {{telegram: "@{update.effective_user.username}", challengeId: {CHALLENGE_ID}}}) {{
+            user
+        }}
+        }}
+    """
+    print(query)
+    response = fetch_data_from_subgraph(query)
+    if response['data']['newUsers']:
+        print('User staked and joined successfully')
+        CHALLENGE.join(update.effective_user.id)
+        CHALLENGE.save("data/challenge.json")
+
+
     try:
         if update.effective_user.id in CHALLENGE.members:
             await context.bot.send_message(chat_id=update.effective_chat.id, text="You're already part of the challenge!")
@@ -228,7 +269,6 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         logging.error(f"Error loading user data: {e}")
         # If there's an error loading the user, we'll create a new one
-
     # Create a new user
     user = FitnessUser(
         telegram_id=update.effective_user.id,
@@ -236,10 +276,6 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
         join_date=date.today()  # Explicitly set join_date
     )
     user.save_user()
-    
-    CHALLENGE.join(user.telegram_id)
-    CHALLENGE.save("data/challenge.json")
-
 
 
 # Generate QR code for USDC staking
@@ -266,7 +302,7 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=bio,
-        caption=f"Scan this QR code with your mobile wallet to stake USDC and join the challenge.\n\n<a href='{metamask_deep_link}'>Or click here to send directly via MetaMask</a>",
+        caption=f"Scan this QR code with your mobile wallet to stake USDC and join the challenge.\n\n<a href='{metamask_deep_link}'>Or click here to send directly via MetaMask</a>\n\nTo check your status run /join again after you sent the transaction.",
         parse_mode=telegram.constants.ParseMode.HTML
     )
 
@@ -306,14 +342,14 @@ async def check_reward(update: Update, context: ContextTypes.DEFAULT_TYPE):
 #     if update.effective_chat is None or update.effective_user is None:
 #         logging.error(f"Invalid update object, missing effective chat or user: {update}")
 #         return
-
-    user = FitnessUser.load_user(update.effective_user.id)
-    if not user:
-        await context.bot.send_message(chat_id=update.effective_chat.id, text="You're not part of the challenge yet. Use /join to join the challenge.")
-        return
-
-    # Here you would implement the logic to mark a rest day
-    await context.bot.send_message(chat_id=update.effective_chat.id, text="Rest day marked. Remember to get back to running tomorrow!")
+#
+#    user = FitnessUser.load_user(update.effective_user.id)
+#    if not user:
+#        await context.bot.send_message(chat_id=update.effective_chat.id, text="You're not part of the challenge yet. Use /join to join the challenge.")
+#        return
+#
+#    # Here you would implement the logic to mark a rest day
+#    await context.bot.send_message(chat_id=update.effective_chat.id, text="Rest day marked. Remember to get back to running tomorrow!")
 
 async def show_rules(update: Update, context: ContextTypes.DEFAULT_TYPE):
     rules = """
@@ -382,7 +418,7 @@ def evaluate_screenshot(image_url):
             current_time = datetime.now()
             if run_evaluation.date:
                 try:
-                    run_date = datetime.strptime(run_evaluation.date, "%Y-%m-%d %H:%M")
+                    run_date = run_evaluation.get_datetime()
                     
                     # Check if the run date is in the future
                     if run_date > current_time:
@@ -497,9 +533,12 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     result = evaluate_screenshot(encoded_image)
     # TODO check the date is correct and within 24 hours
+    if user.last_run_date == date.today():
+        result.message = "You already submitted today, please wait until tomorrow."
+        result.valid = False
     if result.valid:
         user.add_run(result.kilometers)
-        call_function(CHALLENGE_CONTRACT_ADDRESS, 'addDailyRunOnBehalfOfUser(uint256,uint256,address)', CHALLENGE_ID, round(result.kilometers * 100), user.telegram_id)    
+        # TODO add back in: call_function(CHALLENGE_CONTRACT_ADDRESS, 'addDailyRunOnBehalfOfUser(uint256,uint256,address)', CHALLENGE_ID, round(result.kilometers * 100), user.address)    
         user.save_user()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,

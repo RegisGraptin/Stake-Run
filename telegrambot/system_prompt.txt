@@ -6,6 +6,7 @@ Always convert the distance run into kilometers, e.g. if the distance run is in 
 Activities such as swimming, cycling, or any other exercise, even if it covers distances, are not valid. 
 The kilometers must be more than 1 km for the activity to be valid.
 
+
 {
     "date": "2024-10-02 12:26",
     "valid": true,

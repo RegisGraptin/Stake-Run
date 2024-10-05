@@ -225,6 +225,37 @@ contract StakeAndRun {
         emit DailyRunUploaded(challengeId, msg.sender, distanceKm);
     }
 
+    function addDailyRunOnBehalfOfUser(uint256 challengeId, uint256 distanceKm, address userAdress) external {
+        // The telegram bot will sponsor the tx
+        require(
+            challenges[challengeId].startTime < block.timestamp,
+            "Challenge has not started!"
+        );
+        require(
+            !challenges[challengeId].isCompleted,
+            "Challenge is completed!"
+        );
+        require(
+            isParticipant(challengeId, userAdress),
+            "User is not a participant!"
+        );
+        require(distanceKm > 1, "Must run at least 1km");
+
+        // Get user info
+        UserMetadata memory user = userInfo[challengeId][userAdress];
+        uint256 duration = block.timestamp - user.lastUpdated;
+
+        // User did not submit the last day
+        if (duration > 1.2 days) {
+            user.totalRestDay = duration % 1 days;
+        }
+
+        user.kilometersRunned += distanceKm;
+        user.lastUpdated = block.timestamp;
+
+        emit DailyRunUploaded(challengeId, userAdress, distanceKm);
+    }
+
     function getLeaderBoard(uint256 challengeId) view public returns(address[] memory) {
         // We alrady have the leaderboard
         if (savedLeaderBoard[challengeId].length > 0) {

@@ -8,9 +8,9 @@ dataSources:
     name: StakeAndRun
     network: scroll-sepolia
     source:
-      address: "0x5d577A3e774622f49f333499534be55a2Cf5d4F6"
+      address: "0x5314D73A0A122Ea9b7f4747cdC0a47eB998CC7DD"
       abi: StakeAndRun
-      startBlock: 6868679
+      startBlock: 6875577
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

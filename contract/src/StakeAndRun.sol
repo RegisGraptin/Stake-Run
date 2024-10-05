@@ -60,7 +60,7 @@ contract StakeAndRun {
 
     mapping(uint256 => mapping(address => bool)) participants;
 
-    mapping(address => bool) isRealHuman; // Verify the user with worldcoin
+    mapping(address => bool) public isRealHuman; // Verify the user with worldcoin
 
     mapping(uint256 => mapping(address => UserMetadata)) userInfo;
 

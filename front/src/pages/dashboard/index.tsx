@@ -13,9 +13,9 @@ import { GRAPHQL_QUERY_GET_CHALLEGES, subgraphQuery } from "../../utils/graph";
 
 const Dashboard: NextPage = () => {
 
-    const [challenges, setChallenges] = useState<[]>(undefined);
-    const [verifiedAccount, setVerifiedAccount] = useState<boolean>(false);
+    const { isConnected, address } = useAccount();
 
+    const [challenges, setChallenges] = useState<[]>(undefined);
 
     async function fetchChallenges() {
         // Fetch the graph and set it to challenges
@@ -23,27 +23,46 @@ const Dashboard: NextPage = () => {
         setChallenges(data.newChallenges);
     }
 
+    const { data: verifiedAccount, isLoading: verifiedAccountLoading } = useReadContract({
+        address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as Address,
+        abi: StakeAndRun.abi,
+        functionName: 'isRealHuman',
+        args: [
+            address
+        ],
+    });
+
+    async function fetchUserStatus() {
+
+    }
+
     useEffect(() => {
         if (challenges === undefined) {
             fetchChallenges()
         }
+        if (verifiedAccount === undefined) {
+            fetchUserStatus()
+        }
      }, []);
 
     
-    const { isConnected, address } = useAccount();
 
-    const onSuccess = () => {
-        setVerifiedAccount(true);
-    }
+    const onSuccess = () => {}
 
     const handleVerify = async (proof: ISuccessResult) => {
         console.log("Only work locally as a server is needed...")
+        
+        proof["user_address"] = address;
+        let data = JSON.stringify(proof);
+    
+        console.log(data);
+
         const res = await fetch("http://localhost:3001/api/verify", { // route to your backend will depend on implementation
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(proof),
+            body: data,
         })
         if (!res.ok) {
             throw new Error("Verification failed."); // IDKit will display the error message to the user in the modal
@@ -63,11 +82,12 @@ const Dashboard: NextPage = () => {
 
                     {!verifiedAccount && (
                         <IDKitWidget
-                            app_id="app_staging_bcd4ed1fdbc0bd7f4dbbc4936e666e88" // must be an app set to on-chain in Developer Portal
+                            app_id="app_staging_aceae16e2996775ce32693a46ad64a01" // must be an app set to on-chain in Developer Portal
                             action="identification"
-                            signal={address} // proof will only verify if the signal is unchanged, this prevents tampering
+                            // signal={address} // proof will only verify if the signal is unchanged, this prevents tampering
                             onSuccess={onSuccess} // use onSuccess to call your smart contract
                             handleVerify={handleVerify}
+                            verification_level={VerificationLevel.Orb}
                             // no use for handleVerify, so it is removed
                             // use default verification_level (orb-only), as device credentials are not supported on-chain
                         >

@@ -1,0 +1,9 @@
+query ChallengeQuery {
+    challengeCompleteds(first: 5) {
+        id
+        challengeId
+        blockNumber
+        blockTimestamp
+    }
+}
+

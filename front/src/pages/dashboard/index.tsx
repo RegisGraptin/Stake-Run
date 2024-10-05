@@ -7,9 +7,27 @@ import { ChallengeCard } from "../../components/ChallengeCard";
 import StakeAndRun from "../../abi/StakeAndRun.json";
 import { Address } from "viem";
 
+import { useEffect, useState } from "react";
+import { GRAPHQL_QUERY_GET_CHALLEGES, subgraphQuery } from "../../utils/graph";
+
+
 const Dashboard: NextPage = () => {
 
+    const [challenges, setChallenges] = useState<[]>(undefined);
 
+    async function fetchChallenges() {
+        // Fetch the graph and set it to challenges
+        let data = await subgraphQuery(GRAPHQL_QUERY_GET_CHALLEGES);
+        setChallenges(data.newChallenges);
+    }
+
+    useEffect(() => {
+        if (challenges === undefined) {
+            fetchChallenges()
+        }
+     }, []);
+
+    
     const { isConnected, address } = useAccount();
 
     const onSuccess = () => {
@@ -36,12 +54,12 @@ const Dashboard: NextPage = () => {
 
                 <h2 className="text-4xl font-extrabold">Dashboard</h2>
 
-                <div>{n_challenges?.toString()}</div>
-
-
                 <div className="gap-16 items-center py-8 px-4 mx-auto max-w-screen-xl lg:grid lg:grid-cols-3 lg:py-16 lg:px-6">
-                    <ChallengeCard />
-                    {/* <NewChallengeCard /> */}
+                    {challenges && challenges.map((challenge, key) => {
+                        return (
+                            <ChallengeCard challenge={challenge} key={key} />
+                        )
+                    })}
                 </div>
 
 

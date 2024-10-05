@@ -1,10 +1,11 @@
 import { NextPage } from "next";
 import { useRouter } from "next/router";
 import { Header } from "../../components/Header";
-import { useReadContract } from "wagmi";
-import { Address } from "viem";
+import { BaseError, useReadContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { Address, parseEther } from "viem";
 import StakeAndRun from "../../abi/StakeAndRun.json";
 import { useAccount } from 'wagmi'
+import JoinForm from "../../components/JoinForm";
 
 
 export default function ChallengePage() {
@@ -45,13 +46,14 @@ export default function ChallengePage() {
                             Aldready join ? {userJoined ? "yes" : "no"}
                         </p>
 
-
                     </div>
 
                 </div>
             </section>
 
-            <p>Post: {router.query.id}</p>
+
+            {/* <JoinForm /> */}
+
         </>
     )
 }

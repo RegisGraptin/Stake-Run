@@ -60,6 +60,7 @@ export function handleNewUser(event: NewUserEvent): void {
   )
   entity.challengeId = event.params.challengeId
   entity.user = event.params.user
+  entity.telegram = event.params.telegram
 
   entity.blockNumber = event.block.number
   entity.blockTimestamp = event.block.timestamp

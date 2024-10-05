@@ -30,6 +30,7 @@ type NewUser @entity(immutable: true) {
   id: Bytes!
   challengeId: BigInt! # uint256
   user: Bytes! # address
+  telegram: String! # string
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   transactionHash: Bytes!

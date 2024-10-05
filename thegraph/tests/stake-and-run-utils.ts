@@ -82,7 +82,8 @@ export function createNewChallengeEvent(
 
 export function createNewUserEvent(
   challengeId: BigInt,
-  user: Address
+  user: Address,
+  telegram: string
 ): NewUser {
   let newUserEvent = changetype<NewUser>(newMockEvent())
 
@@ -96,6 +97,9 @@ export function createNewUserEvent(
   )
   newUserEvent.parameters.push(
     new ethereum.EventParam("user", ethereum.Value.fromAddress(user))
+  )
+  newUserEvent.parameters.push(
+    new ethereum.EventParam("telegram", ethereum.Value.fromString(telegram))
   )
 
   return newUserEvent

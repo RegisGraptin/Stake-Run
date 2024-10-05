@@ -20,7 +20,13 @@ const Dashboard: NextPage = () => {
     async function fetchChallenges() {
         // Fetch the graph and set it to challenges
         let data = await subgraphQuery(GRAPHQL_QUERY_GET_CHALLEGES);
-        setChallenges(data.newChallenges);
+        console.log(data);
+        if (data) {
+            setChallenges(data.newChallenges);    
+        } else {
+            setChallenges([]);
+        }
+        
     }
 
     const { data: verifiedAccount, isLoading: verifiedAccountLoading } = useReadContract({

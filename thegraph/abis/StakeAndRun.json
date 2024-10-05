@@ -85,6 +85,12 @@
         "internalType": "address",
         "name": "user",
         "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "telegram",
+        "type": "string"
       }
     ],
     "name": "NewUser",

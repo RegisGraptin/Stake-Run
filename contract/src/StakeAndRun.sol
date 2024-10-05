@@ -70,7 +70,7 @@ contract StakeAndRun {
 
     /// Events
     event NewChallenge(uint256 id, uint256 startTime, uint256 endTime);
-    event NewUser(uint256 challengeId, address user);
+    event NewUser(uint256 challengeId, address user, string telegram);
     event DailyRunUploaded(uint256 challengeId, address user, uint256 distance);
     event ChallengeCompleted(uint256 challengeId);
 
@@ -167,7 +167,7 @@ contract StakeAndRun {
         challenges[challengeId].stakingAmount += msg.value;
 
         // Emit event
-        emit NewUser(challengeId, msg.sender);
+        emit NewUser(challengeId, msg.sender, telegramHandler);
     }
 
     function joinChallengeOnBehalfOfUser(
@@ -191,7 +191,7 @@ contract StakeAndRun {
         challenges[challengeId].stakingAmount += msg.value;
 
         // Emit event
-        emit NewUser(challengeId, user);
+        emit NewUser(challengeId, user, telegramHandler);
     }
 
 

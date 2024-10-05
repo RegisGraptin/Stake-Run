@@ -22,6 +22,7 @@ from typing import List, Optional, Type, TypeVar
 from pydantic import BaseModel, Field, StrictStr
 import requests
 from datetime import date
+import re
 
 T = TypeVar('T', bound=BaseModel) 
 SYSTEM_PROMPT = pathlib.Path("telegrambot/system_prompt.txt").read_text()

@@ -19,13 +19,20 @@ from pydantic import BaseModel, Field
 import requests
 from datetime import date
 import re
+from web3 import Web3
 
 T = TypeVar('T', bound=BaseModel) 
 SYSTEM_PROMPT = pathlib.Path("telegrambot/system_prompt.txt").read_text()
 USDC_CONTRACT_ADDRESS = '0x2C9678042D52B97D27f2bD2947F7111d93F3dD0D'
-CHALLENGE_CONTRACT_ADDRESS = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913'
-CHAIN_ID = "534351" # scroll sepolia chain id
+#CHALLENGE_CONTRACT_ADDRESS = '0x5314D73A0A122Ea9b7f4747cdC0a47eB998CC7DD'
 
+CHAIN_ID = "534351" # scroll sepolia chain id
+CHALLENGE_ID = "1"
+RPC_URL = os.getenv('RPC_URL')
+CALLER_ADDRESS = os.getenv('ACCOUNT_ADDRESS')
+CALLER_PK = os.getenv('PRIVATE_KEY')
+
+CHALLENGE_CONTRACT_ADDRESS = os.getenv('CHALLENGE_CONTRACT_ADDRESS')
 
 dotenv.load_dotenv("telegrambot/.env")
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -34,6 +41,88 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
+
+
+# Connect to an Ethereum node
+web3 = Web3(Web3.HTTPProvider(RPC_URL))
+
+if web3.is_connected():
+    print("Connection Successful")
+else:
+    print("Connection Failed")
+
+
+def parse_signature(signature):
+    # Split the signature into function name and parameters
+    name, params = signature.split('(')
+    params = params.rstrip(')')
+    
+    # Parse parameters
+    param_types = params.split(',') if params else []
+    
+    return name, param_types
+
+def generate_abi(signature):
+    name, param_types = parse_signature(signature)
+    
+    abi = {
+        "inputs": [dict(zip(("type", "name"), param.split())) for param in param_types],
+        "name": name,
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+    
+    return [abi]
+
+def call_function(contract_address: str, signature: str, *args):
+    name, _ = parse_signature(signature)
+    abi = generate_abi(signature)
+    print(json.dumps(abi, indent=2))
+    
+    # Create contract instance
+    contract = web3.eth.contract(address=contract_address, abi=abi)
+    
+    # Get the function from the contract
+    contract_function = getattr(contract.functions, name)
+    
+    # Prepare the transaction data
+    transaction_data = contract_function(*args).build_transaction({
+        'from': CALLER_ADDRESS,
+        'nonce': web3.eth.get_transaction_count(CALLER_ADDRESS),
+        'gas': 0,  # We'll estimate this
+        'gasPrice': web3.eth.gas_price,
+    })
+
+    # Estimate gas
+    try:
+        estimated_gas = web3.eth.estimate_gas(transaction_data)
+        print(f"Estimated gas: {estimated_gas}")
+        
+        # Add some buffer to the estimated gas (e.g., 10%)
+        gas_limit = int(estimated_gas * 1.1)
+        print(f"Gas limit with buffer: {gas_limit}")
+        
+        # Update the transaction with the estimated gas (plus buffer)
+        transaction_data['gas'] = gas_limit
+    except Exception as e:
+        print(f"Error estimating gas: {e}")
+        print("Using default gas limit of 200,000")
+        transaction_data['gas'] = 200000
+
+    # Sign the transaction
+    signed_txn = web3.eth.account.sign_transaction(transaction_data, CALLER_PK)
+
+    # Send the transaction
+    tx_hash = web3.eth.send_raw_transaction(signed_txn.raw_transaction)
+
+    # Wait for the transaction receipt
+    tx_receipt = web3.eth.wait_for_transaction_receipt(tx_hash)
+
+    print(f"Transaction successful. Transaction hash: {tx_receipt.transactionHash.hex()}")
+    print(f"Gas used: {tx_receipt.gasUsed}")
+    return tx_receipt
+
 
 def load_json_as_model(path: str, model: Type[T]) -> T:
     with open(path, 'r') as file:
@@ -60,6 +149,7 @@ class FitnessUser(StoreableBaseModel):
     rest_days: int = Field(default=0)
     last_run_date: Optional[date] = Field(default=None)
     join_date: date = Field(default_factory=date.today)
+    disqualified: bool = Field(default=False)
 
     def add_run(self, kilometers: float):
         self.total_kilometers += kilometers
@@ -91,7 +181,7 @@ class RunEvaluation(BaseModel):
     message: str
 
 class MockChallengeContract(StoreableBaseModel):
-    staking_amount: float = Field(default=10.0)
+    staking_amount: int = Field(default=1)
     members: set[int] = Field(default_factory=set)
     pool: float = Field(default=0.0)
     
@@ -105,7 +195,24 @@ class MockChallengeContract(StoreableBaseModel):
 try:
     CHALLENGE = MockChallengeContract.load("data/challenge.json")
 except FileNotFoundError:
-    CHALLENGE = MockChallengeContract(staking_amount=10.0)
+    CHALLENGE = MockChallengeContract(staking_amount=1)
+
+
+
+def create_eip681_url(contract_address: str, chain_id: int, signature: str, *args, value: int = 0):
+    name, params = signature.split('(')
+    params = params.rstrip(')')
+    url = f"{contract_address}@{chain_id}/{name}"
+    if params:
+        param_types = params.split(',')
+        url += "?"
+        param_strs = []
+        for param_type, arg in zip(param_types, args):
+            param_strs.append(f"{param_type.strip()}={arg}")
+        url += "&".join(param_strs)
+    if value > 0:
+        url += f"&value={int(value)}"
+    return url
 
 
 
@@ -133,10 +240,18 @@ async def join_challenge(update: Update, context: ContextTypes.DEFAULT_TYPE):
     CHALLENGE.join(user.telegram_id)
     CHALLENGE.save("data/challenge.json")
 
+
+
 # Generate QR code for USDC staking
     amount = CHALLENGE.staking_amount
-    eip681_url = f"ethereum:pay-{USDC_CONTRACT_ADDRESS}@{CHAIN_ID}/transfer?address={CHALLENGE_CONTRACT_ADDRESS}&uint256={int(amount * 1e6)}"
-    
+    eip681_url = create_eip681_url(CHALLENGE_CONTRACT_ADDRESS, 
+                  CHAIN_ID, 
+                  "joinChallenge(uint256,string)", 
+                  CHALLENGE_ID,
+                  user.username, 
+                  value=CHALLENGE.staking_amount)
+
+
     qr = qrcode.QRCode(version=1, box_size=10, border=5)
     qr.add_data(eip681_url)
     qr.make(fit=True)
@@ -303,6 +418,9 @@ def evaluate_screenshot(image_url):
         print(f"Error processing screenshot: {e}")
         return RunEvaluation(date="", valid=False, kilometers=0.0, message="Error processing your screenshot. Please try again.")
 
+
+
+
 async def send_daily_motivation(context: ContextTypes.DEFAULT_TYPE):
     logging.info("Sending daily motivation messages")
     motivational_quotes = [
@@ -323,17 +441,31 @@ async def send_daily_motivation(context: ContextTypes.DEFAULT_TYPE):
             
             if user.last_run_date != datetime.now().date() - timedelta(days=1):
                 if user.rest_days < 4:
-                    message = f"Good morning, @{user.username}! It looks like you took a rest yesterday. You have {4 - user.rest_days} rest days remaining."
+                    message = f"Good morning, @{user.username}! It looks like you took a rest yesterday. You have {3 - user.rest_days} rest days remaining.\n\n{quote}"
                     user.add_rest_day()
                 elif user.rest_days == 4:
-                    message = f"Good morning, @{user.username}! You have used up all your rest days. Don't miss the next upload or you'll get slashed!"
+                    message = f"Sorry, @{user.username}. You didn't make it in this challenge. You've used up all your rest days and missed another day. See you next time!"
+                    user.disqualified = True  # Add this field to FitnessUser class
                 else:
                     message = f"Sorry, @{user.username}. You didn't make it in this challenge. See you next time!"
             else:
                 message = f"Good morning, @{user.username}! Rise and shine! It's day {days_since_join} of the Stake & Run Challenge. You're doing great! Keep it up!\n\n{quote}\n\nRemember to submit your proof-of-run within 24 hours if you've completed your run yesterday."
 
-            await context.bot.send_message(chat_id=user_id, text=message)
+            if not user.disqualified:
+                try:
+                    await context.bot.send_message(chat_id=user_id, text=message)
+                    logging.info(f"Sent motivation message to user {user_id}")
+                except telegram.error.BadRequest as e:
+                    if 'Chat not found' in str(e):
+                        logging.warning(f"Failed to send message to user {user_id}: Chat not found")
+                    else:
+                        logging.error(f"Error sending message to user {user_id}: {e}")
+                except Exception as e:
+                    logging.error(f"Unexpected error sending message to user {user_id}: {e}")
+            
             user.save_user()
+
+    logging.info("Finished sending daily motivation messages")
 
 async def send_typing_action(context: ContextTypes.DEFAULT_TYPE, chat_id: int):
     await context.bot.send_chat_action(chat_id=chat_id, action=telegram.constants.ChatAction.TYPING)
@@ -367,6 +499,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # TODO check the date is correct and within 24 hours
     if result.valid:
         user.add_run(result.kilometers)
+        call_function(CHALLENGE_CONTRACT_ADDRESS, 'addDailyRunOnBehalfOfUser(uint256,uint256,address)', CHALLENGE_ID, round(result.kilometers * 100), user.telegram_id)    
         user.save_user()
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -416,7 +549,7 @@ if __name__ == '__main__':
     application.add_handler(CommandHandler('rules', show_rules))
     application.add_handler(CommandHandler('help', show_help))
     application.add_handler(CommandHandler('bottime', show_bot_time))
-    application.add_handler(CommandHandler('testmotivation', test_motivation))
+    application.add_handler(CommandHandler('test_motivation', test_motivation))
 
     # Add photo handler
     #application.add_handler(MessageHandler(filters.PHOTO, handle_photo))

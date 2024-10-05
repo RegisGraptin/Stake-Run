@@ -6,3 +6,4 @@ apscheduler
 openai
 pydantic
 Pillow
+web3

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-export const GRAPHQL_QUERY_GET_CHALLEGES = "query {newChallenges { id blockNumber blockTimestamp startTime endTime }}";
+export const GRAPHQL_QUERY_GET_CHALLEGES = "query {newChallenges { StakeAndRun_id blockNumber blockTimestamp startTime endTime }}";
 
 // Function to call the graph sub queries
 export async function subgraphQuery(query) {

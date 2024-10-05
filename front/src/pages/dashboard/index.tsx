@@ -34,17 +34,6 @@ const Dashboard: NextPage = () => {
 
     }
 
-    const handleVerify = () => {
-
-    }
-
-    const { data: n_challenges } = useReadContract({
-        address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as Address,
-        abi: StakeAndRun.abi,
-        functionName: 'n_restaurants',
-        args: [],
-    })
-
 
     return (
         <div>

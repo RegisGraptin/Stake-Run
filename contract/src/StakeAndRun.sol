@@ -1,7 +1,31 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
+import { ByteHasher } from './helpers/ByteHasher.sol';
+import { IWorldID } from './interfaces/IWorldID.sol';
+
 contract StakeAndRun {
+	
+    using ByteHasher for bytes;
+    
+    //// Worldcoin properties
+    /// @notice Thrown when attempting to reuse a nullifier
+    error InvalidNullifier();
+
+    /// @dev The address of the World ID Router contract that will be used for verifying proofs
+    IWorldID internal immutable worldId;
+
+    /// @dev The keccak256 hash of the externalNullifier (unique identifier of the action performed), combination of appId and action
+    uint256 internal immutable externalNullifierHash;
+
+    /// @dev The World ID group ID (1 for Orb-verified)
+    uint256 internal immutable groupId = 1;
+
+    /// @dev Whether a nullifier hash has been used already. Used to guarantee an action is only performed once by a single person
+    mapping(uint256 => bool) internal nullifierHashes;
+
+
+    /// Contract properties
     // Contract owner
     address owner;
 
@@ -43,9 +67,18 @@ contract StakeAndRun {
     event DailyRunUploaded(uint256 challengeId, address user, uint256 distance);
     event ChallengeCompleted(uint256 challengeId);
 
-    constructor() {
+    constructor(
+        // IWorldID _worldId, // Does not exists on Scroll ???
+        string memory _appId,
+        string memory _action
+    ) {
         owner = msg.sender;
         currentChallengeRunning = false;
+
+        // worldId = _worldId;
+        externalNullifierHash = abi
+            .encodePacked(abi.encodePacked(_appId).hashToField(), _action)
+            .hashToField();
     }
 
     function createNewChallenge(
@@ -210,5 +243,36 @@ contract StakeAndRun {
         delete currentParticipants;
         challenges[challengeId].isCompleted = true;
     }
+
+    /// @param signal An arbitrary input from the user, usually the user's wallet address
+    /// @param root The root (returned by the IDKit widget).
+    /// @param nullifierHash The nullifier hash for this proof, preventing double signaling (returned by the IDKit widget).
+    /// @param proof The zero-knowledge proof that demonstrates the claimer is registered with World ID (returned by the IDKit widget).
+    function verifyAndExecute(
+        address signal,
+        uint256 root,
+        uint256 nullifierHash,
+        uint256[8] calldata proof
+    ) public {
+        // First make sure this person hasn't done this before
+        if (nullifierHashes[nullifierHash]) revert InvalidNullifier();
+
+        // Now verify the provided proof is valid and the user is verified by World ID
+        worldId.verifyProof(
+            root,
+            groupId,
+            abi.encodePacked(signal).hashToField(),
+            nullifierHash,
+            externalNullifierHash,
+            proof
+        );
+
+        // Record the user has done this, so they can't do it again (proof of uniqueness)
+        nullifierHashes[nullifierHash] = true;
+
+        // Finally, execute your logic here, for example issue a token, NFT, etc...
+
+    }
+
 
 }
